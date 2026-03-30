@@ -1,0 +1,71 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-bg-page: #F4F4F0;
+  --color-sidebar: #FFFFFF;
+  --color-border-subtle: #EBEBEB;
+  --color-accent-primary: #1A1A2E;
+  --color-accent-interactive: #6B5CE7;
+  --color-accent-hover: #EEF0FB;
+  --color-text-primary: #1A1A2E;
+  --color-text-secondary: #7A7A8C;
+  --color-text-tertiary: #B0B0BF;
+  --color-divider: #EBEBEB;
+}
+
+@layer base {
+  body {
+    @apply bg-bg-page text-text-primary font-sans antialiased;
+  }
+}
+
+@media print {
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+  }
+  
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .card-shadow {
+    box-shadow: none !important;
+    border: 1px solid #EBEBEB !important;
+  }
+
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
+
+.card-shadow {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+/* Custom scrollbar for table */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #F4F4F0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #D1D1D1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #B0B0BF;
+}
