@@ -9,7 +9,7 @@ import {
   Settlement,
   Brand
 } from './types';
-import { generateMockData, generateSettlementMockData } from './mockData';
+import { generateMockData, generateSettlementMockData, generatePSPMockData } from './mockData';
 import { runReconciliationLogic } from './lib/reconciliation/matching';
 
 // Shared Components
@@ -29,6 +29,7 @@ import { ImportHistoryPanel } from './components/modals/ImportHistoryPanel';
 import { TransactionDetailsModal } from './components/modals/TransactionDetailsModal';
 import { ManualMatchModal } from './components/modals/ManualMatchModal';
 import { PSPConfigModal } from './components/modals/PSPConfigModal';
+import { PSPHistoryModal } from './components/modals/PSPHistoryModal';
 
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -37,24 +38,7 @@ const App = () => {
   const [activePage, setActivePage] = useState<'Transactions' | 'Reconciliation' | 'Reports' | 'PSP Config' | 'Settlement Calendar'>('Transactions');
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
-  const [pspConfigs, setPspConfigs] = useState<PSPConfig[]>([
-    {
-      id: '1',
-      name: 'Stripe',
-      type: 'Gateway',
-      status: 'Active',
-      lastSync: new Date(),
-      config: { endpoint: 'https://api.stripe.com/v1', apiKey: 'sk_live_••••••••', webhookUrl: 'https://app.recon.com/webhooks/stripe' }
-    },
-    {
-      id: '2',
-      name: 'Adyen',
-      type: 'Gateway',
-      status: 'Active',
-      lastSync: subDays(new Date(), 1),
-      config: { endpoint: 'https://checkout-test.adyen.com/v69', apiKey: 'ws_••••••••', webhookUrl: 'https://app.recon.com/webhooks/adyen' }
-    }
-  ]);
+  const [pspConfigs, setPspConfigs] = useState<PSPConfig[]>([]);
   const [importLog, setImportLog] = useState<ImportLog[]>([]);
   const [toasts, setToasts] = useState<{ id: number, message: string, type: 'success' | 'error' }[]>([]);
 
@@ -65,6 +49,8 @@ const App = () => {
   const [showManualMatch, setShowManualMatch] = useState<ReconResult | null>(null);
   const [editingPsp, setEditingPsp] = useState<PSPConfig | null>(null);
   const [showPspModal, setShowPspModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyPsp, setHistoryPsp] = useState<PSPConfig | null>(null);
 
   // --- Reconciliation States ---
   const [pspFile, setPspFile] = useState<{ name: string, rows: number, data: any[] } | null>(null);
@@ -75,6 +61,7 @@ const App = () => {
   useEffect(() => {
     setAllTransactions(generateMockData(200));
     setSettlements(generateSettlementMockData());
+    setPspConfigs(generatePSPMockData());
   }, []);
 
   // --- Handlers ---
@@ -302,6 +289,7 @@ const App = () => {
                   onAddPsp={() => { setEditingPsp(null); setShowPspModal(true); }}
                   onDeletePsp={handleDeletePsp}
                   onToggleStatus={handleTogglePspStatus}
+                  onViewHistory={(psp) => { setHistoryPsp(psp); setShowHistoryModal(true); }}
                 />
               </motion.div>
             )}
@@ -376,6 +364,14 @@ const App = () => {
             onClose={() => { setShowPspModal(false); setEditingPsp(null); }}
             psp={editingPsp}
             onSave={handleSavePsp}
+          />
+        )}
+
+        {showHistoryModal && (
+          <PSPHistoryModal 
+            isOpen={showHistoryModal}
+            onClose={() => { setShowHistoryModal(false); setHistoryPsp(null); }}
+            psp={historyPsp}
           />
         )}
       </AnimatePresence>

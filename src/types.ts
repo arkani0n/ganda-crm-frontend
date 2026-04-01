@@ -28,14 +28,42 @@ export interface TransactionFilters {
 export interface PSPConfig {
   id: string;
   name: string;
-  type: 'Gateway' | 'Acquirer' | 'E-Wallet' | 'Bank';
+  category: PSPCategory;
   status: PSPStatus;
-  lastSync: Date;
-  config: {
-    endpoint: string;
-    apiKey: string;
-    webhookUrl: string;
-  };
+  logoColor: string;
+  
+  // Fees
+  processingFeePercent: number;
+  processingFeeFixed: number;
+  refundFeePercent: number;
+  chargebackFeeFixed: number;
+  fxMarkupPercent: number;
+  minTransaction: number;
+  maxTransaction: number;
+  
+  // Settlement
+  settlementFrequency: SettlementFrequency;
+  settlementDay?: string;
+  rollingReservePercent: number;
+  reservePeriodDays: number;
+  expectedDelayDays: number;
+  settlementNotes?: string;
+  currencies: Currency[];
+  countries: string[];
+  
+  // API
+  environment: 'Live' | 'Sandbox';
+  endpoint: string;
+  apiKey: string;
+  apiSecret: string;
+  webhookUrl: string;
+  webhookSecret: string;
+  ipWhitelist: string;
+  
+  // Status
+  lastTested?: Date;
+  connectionStatus: 'Online' | 'Offline' | 'Never Tested';
+  notes?: string;
 }
 
 export interface ReconResult {
