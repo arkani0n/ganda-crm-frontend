@@ -91,6 +91,9 @@ export interface Transaction {
   source?: 'system' | 'manual';
   batchId?: string;
   notes?: string;
+  settlementStatus?: SettlementStatus;
+  scheduledSettlementDate?: Date;
+  actualSettlementDate?: Date;
 }
 
 export interface ImportLog {

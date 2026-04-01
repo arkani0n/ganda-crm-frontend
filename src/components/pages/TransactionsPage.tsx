@@ -6,6 +6,7 @@ import {
   Download, 
   Plus, 
   History, 
+  Copy,
   ChevronLeft, 
   ChevronRight, 
   MoreVertical,
@@ -15,7 +16,8 @@ import {
   Activity,
   CheckCircle2,
   AlertCircle,
-  Calendar
+  Calendar,
+  X
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Transaction, TransactionFilters } from '../../types';
@@ -43,10 +45,22 @@ export const TransactionsPage = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<TransactionFilters>({
     dateRange: { start: null, end: null },
-    gateways: [],
-    brands: [],
+    gateways: ['All'],
+    brands: ['All'],
     status: 'All'
   });
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
+    const saved = localStorage.getItem('settlex.transactions.visibleColumns');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse visible columns', e);
+      }
+    }
+    return ['#', 'Transaction ID', 'Date & Time', 'Settlement Date', 'Client', 'Brand', 'Gateway', 'Amount', 'Currency', 'Status', 'Recon'];
+  });
+  const [showColumnManager, setShowColumnManager] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
   const [sortConfig, setSortConfig] = useState<{ key: keyof Transaction, direction: 'asc' | 'desc' }>({
@@ -92,8 +106,48 @@ export const TransactionsPage = ({
     }));
   };
 
-  const gateways = Array.from(new Set(allTransactions.map(t => t.gateway)));
-  const brands = Array.from(new Set(allTransactions.map(t => t.brand)));
+  const gateways = ['All', ...Array.from(new Set(allTransactions.map(t => t.gateway)))];
+  const brands = ['All', ...Array.from(new Set(allTransactions.map(t => t.brand)))];
+
+  const allPossibleColumns = [
+    { id: '#', label: '#' },
+    { id: 'Transaction ID', label: 'Transaction ID' },
+    { id: 'Date & Time', label: 'Date & Time' },
+    { id: 'Settlement Date', label: 'Settlement Date' },
+    { id: 'Client', label: 'Client' },
+    { id: 'Brand', label: 'Brand' },
+    { id: 'Gateway', label: 'Gateway' },
+    { id: 'Amount', label: 'Amount' },
+    { id: 'Currency', label: 'Currency' },
+    { id: 'Status', label: 'Status' },
+    { id: 'Recon', label: 'Recon' },
+  ];
+
+  const toggleColumn = (id: string) => {
+    setVisibleColumns(prev => {
+      let next;
+      if (prev.includes(id)) {
+        if (prev.length === 1) return prev; // Keep at least one
+        next = prev.filter(c => c !== id);
+      } else {
+        next = [...prev, id];
+      }
+      localStorage.setItem('settlex.transactions.visibleColumns', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const selectAllColumns = () => {
+    const all = allPossibleColumns.map(c => c.id);
+    setVisibleColumns(all);
+    localStorage.setItem('settlex.transactions.visibleColumns', JSON.stringify(all));
+  };
+
+  const resetDefaultColumns = () => {
+    const defaults = ['#', 'Transaction ID', 'Date & Time', 'Settlement Date', 'Client', 'Brand', 'Gateway', 'Amount', 'Currency', 'Status', 'Recon'];
+    setVisibleColumns(defaults);
+    localStorage.setItem('settlex.transactions.visibleColumns', JSON.stringify(defaults));
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -211,8 +265,62 @@ export const TransactionsPage = ({
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <div className="relative">
+              <button 
+                onClick={() => setShowColumnManager(!showColumnManager)}
+                className="flex items-center gap-2 px-4 py-2 border border-border-subtle rounded-lg text-[13px] font-medium text-text-secondary hover:bg-white hover:text-text-primary transition-all"
+              >
+                <Filter size={16} /> Columns
+              </button>
+              
+              <AnimatePresence>
+                {showColumnManager && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute right-0 top-full mt-2 w-64 bg-white border border-border-subtle rounded-xl shadow-xl z-50 p-4"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-[14px] font-bold text-text-primary">Visible Columns</h3>
+                      <button onClick={() => setShowColumnManager(false)} className="text-text-tertiary hover:text-text-primary">
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="flex flex-col gap-2 max-h-64 overflow-y-auto custom-scrollbar pr-2">
+                      {allPossibleColumns.map(col => (
+                        <label key={col.id} className="flex items-center gap-3 cursor-pointer group">
+                          <input 
+                            type="checkbox" 
+                            checked={visibleColumns.includes(col.id)}
+                            onChange={() => toggleColumn(col.id)}
+                            className="w-4 h-4 rounded border-border-subtle text-accent-interactive focus:ring-accent-interactive"
+                          />
+                          <span className="text-[13px] text-text-secondary group-hover:text-text-primary transition-colors">{col.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border-subtle">
+                      <button 
+                        onClick={selectAllColumns}
+                        className="flex-1 py-1.5 text-[11px] font-bold text-accent-interactive hover:bg-accent-hover/30 rounded-md transition-all"
+                      >
+                        Select All
+                      </button>
+                      <button 
+                        onClick={resetDefaultColumns}
+                        className="flex-1 py-1.5 text-[11px] font-bold text-text-tertiary hover:bg-bg-page rounded-md transition-all"
+                      >
+                        Reset Default
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <button 
-              onClick={() => setFilters({ dateRange: { start: null, end: null }, gateways: [], brands: [], status: 'All' })}
+              onClick={() => setFilters({ dateRange: { start: null, end: null }, gateways: ['All'], brands: ['All'], status: 'All' })}
               className="text-[12px] font-semibold text-text-tertiary hover:text-accent-interactive transition-colors"
             >
               Reset Filters
@@ -225,58 +333,149 @@ export const TransactionsPage = ({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-bg-page/30 border-b border-border-subtle">
-                <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">
-                  <button onClick={() => handleSort('txnId')} className="flex items-center gap-1 hover:text-text-primary transition-colors">
-                    Transaction ID <ArrowUpDown size={12} />
-                  </button>
-                </th>
-                <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">
-                  <button onClick={() => handleSort('timestamp')} className="flex items-center gap-1 hover:text-text-primary transition-colors">
-                    Date & Time <ArrowUpDown size={12} />
-                  </button>
-                </th>
-                <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Client & Brand</th>
-                <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Gateway</th>
-                <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">
-                  <button onClick={() => handleSort('amount')} className="flex items-center gap-1 hover:text-text-primary transition-colors">
-                    Amount <ArrowUpDown size={12} />
-                  </button>
-                </th>
-                <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Recon</th>
+                {visibleColumns.includes('#') && (
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">#</th>
+                )}
+                {visibleColumns.includes('Transaction ID') && (
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">
+                    <button onClick={() => handleSort('txnId')} className="flex items-center gap-1 hover:text-text-primary transition-colors">
+                      Transaction ID <ArrowUpDown size={12} />
+                    </button>
+                  </th>
+                )}
+                {visibleColumns.includes('Date & Time') && (
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">
+                    <button onClick={() => handleSort('timestamp')} className="flex items-center gap-1 hover:text-text-primary transition-colors">
+                      Date & Time <ArrowUpDown size={12} />
+                    </button>
+                  </th>
+                )}
+                {visibleColumns.includes('Settlement Date') && (
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">
+                    <button onClick={() => handleSort('scheduledSettlementDate' as any)} className="flex items-center gap-1 hover:text-text-primary transition-colors">
+                      Settlement Date <ArrowUpDown size={12} />
+                    </button>
+                  </th>
+                )}
+                {(visibleColumns.includes('Client') || visibleColumns.includes('Brand')) && (
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">
+                    {visibleColumns.includes('Client') && visibleColumns.includes('Brand') ? 'Client & Brand' : visibleColumns.includes('Client') ? 'Client' : 'Brand'}
+                  </th>
+                )}
+                {visibleColumns.includes('Gateway') && (
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Gateway</th>
+                )}
+                {visibleColumns.includes('Amount') && (
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">
+                    <button onClick={() => handleSort('amount')} className="flex items-center gap-1 hover:text-text-primary transition-colors">
+                      Amount <ArrowUpDown size={12} />
+                    </button>
+                  </th>
+                )}
+                {visibleColumns.includes('Currency') && (
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Currency</th>
+                )}
+                {visibleColumns.includes('Status') && (
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Status</th>
+                )}
+                {visibleColumns.includes('Recon') && (
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Recon</th>
+                )}
                 <th className="px-6 py-3 text-[10px] font-bold text-text-tertiary uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
-              {paginatedTxns.map((txn) => (
+              {paginatedTxns.map((txn, idx) => (
                 <tr key={txn.id} className="hover:bg-accent-hover/10 transition-colors group">
-                  <td className="px-6 py-4">
-                    <span className="font-mono text-[12px] font-medium text-text-primary group-hover:text-accent-interactive transition-colors">{txn.txnId}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col">
-                      <span className="text-[12px] font-medium text-text-primary">{format(txn.timestamp, 'dd MMM yyyy')}</span>
-                      <span className="text-[11px] text-text-tertiary">{format(txn.timestamp, 'HH:mm:ss')}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col">
-                      <span className="text-[12px] font-bold text-text-primary">{txn.client}</span>
-                      <span className="text-[11px] text-text-tertiary">{txn.brand}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-[12px] font-medium text-text-secondary">{txn.gateway}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-[13px] font-bold text-text-primary">{txn.amount.toLocaleString()} {txn.currency}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <Badge variant={txn.status}>{txn.status}</Badge>
-                  </td>
-                  <td className="px-6 py-4">
-                    <Badge variant={txn.recon === 'Pending' ? 'ReconPending' : txn.recon}>{txn.recon}</Badge>
-                  </td>
+                  {visibleColumns.includes('#') && (
+                    <td className="px-6 py-4">
+                      <span className="text-[12px] text-text-tertiary">{(currentPage - 1) * itemsPerPage + idx + 1}</span>
+                    </td>
+                  )}
+                  {visibleColumns.includes('Transaction ID') && (
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2 group/id">
+                        <span className="font-mono text-[12px] font-medium text-text-primary group-hover:text-accent-interactive transition-colors">{txn.txnId}</span>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(txn.txnId);
+                          }}
+                          className="opacity-0 group-hover/id:opacity-100 p-1 hover:bg-bg-page rounded transition-all text-text-tertiary hover:text-accent-interactive"
+                          title="Copy ID"
+                        >
+                          <Copy size={12} />
+                        </button>
+                      </div>
+                    </td>
+                  )}
+                  {visibleColumns.includes('Date & Time') && (
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-[12px] font-medium text-text-primary">{format(txn.timestamp, 'dd MMM yyyy')}</span>
+                        <span className="text-[11px] text-text-tertiary">{format(txn.timestamp, 'HH:mm:ss')}</span>
+                      </div>
+                    </td>
+                  )}
+                  {visibleColumns.includes('Settlement Date') && (
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-1.5">
+                          <span className={cn(
+                            "text-[12px] font-medium",
+                            txn.actualSettlementDate ? "text-green-600" : "text-text-primary"
+                          )}>
+                            {format(txn.actualSettlementDate || txn.scheduledSettlementDate || new Date(), 'dd MMM yyyy')}
+                          </span>
+                          {txn.actualSettlementDate && <CheckCircle2 size={12} className="text-green-600" />}
+                        </div>
+                        {!txn.actualSettlementDate && (
+                          <span className="text-[10px] text-text-tertiary uppercase font-bold tracking-wider">
+                            {txn.settlementStatus || 'Scheduled'}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                  {(visibleColumns.includes('Client') || visibleColumns.includes('Brand')) && (
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        {visibleColumns.includes('Client') && (
+                          <span className="text-[12px] font-bold text-text-primary">{txn.client}</span>
+                        )}
+                        {visibleColumns.includes('Brand') && (
+                          <span className="text-[11px] text-text-tertiary">{txn.brand}</span>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                  {visibleColumns.includes('Gateway') && (
+                    <td className="px-6 py-4">
+                      <span className="text-[12px] font-medium text-text-secondary">{txn.gateway}</span>
+                    </td>
+                  )}
+                  {visibleColumns.includes('Amount') && (
+                    <td className="px-6 py-4">
+                      <span className="text-[13px] font-bold text-text-primary">
+                        {txn.amount.toLocaleString()} {visibleColumns.includes('Currency') ? '' : txn.currency}
+                      </span>
+                    </td>
+                  )}
+                  {visibleColumns.includes('Currency') && (
+                    <td className="px-6 py-4">
+                      <span className="text-[12px] font-medium text-text-secondary">{txn.currency}</span>
+                    </td>
+                  )}
+                  {visibleColumns.includes('Status') && (
+                    <td className="px-6 py-4">
+                      <Badge variant={txn.status}>{txn.status}</Badge>
+                    </td>
+                  )}
+                  {visibleColumns.includes('Recon') && (
+                    <td className="px-6 py-4">
+                      <Badge variant={txn.recon === 'Pending' ? 'ReconPending' : txn.recon}>{txn.recon}</Badge>
+                    </td>
+                  )}
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button 

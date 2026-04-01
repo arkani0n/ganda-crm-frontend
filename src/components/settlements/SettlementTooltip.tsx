@@ -11,9 +11,19 @@ interface SettlementTooltipProps {
   onMarkReceived: (s: Settlement) => void;
   onEdit: (s: Settlement) => void;
   onDelete: (id: string) => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
-export const SettlementTooltip = ({ settlement, position, onMarkReceived, onEdit, onDelete }: SettlementTooltipProps) => {
+export const SettlementTooltip = ({ 
+  settlement, 
+  position, 
+  onMarkReceived, 
+  onEdit, 
+  onDelete,
+  onMouseEnter,
+  onMouseLeave
+}: SettlementTooltipProps) => {
   const status = getDerivedStatus(settlement);
   const now = new Date();
   const overdueDays = differenceInDays(now, new Date(settlement.expectedDate));
@@ -22,6 +32,8 @@ export const SettlementTooltip = ({ settlement, position, onMarkReceived, onEdit
     <div 
       className="fixed z-[1000] w-[220px] bg-white border border-[#EBEBEB] rounded-xl p-4 shadow-xl pointer-events-auto"
       style={{ top: position.top, left: position.left }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">

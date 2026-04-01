@@ -1,5 +1,5 @@
 import { Transaction, Gateway, Status, ReconStatus, Currency, Brand, PSPConfig, PSPHistoryEntry, Settlement, SettlementStatus } from './types';
-import { subDays, startOfMinute, subHours, addDays, startOfDay } from 'date-fns';
+import { subDays, startOfMinute, subHours, addDays, startOfDay, isBefore } from 'date-fns';
 
 const GATEWAYS: Gateway[] = ['Stripe', 'PayPal', 'Skrill', 'Neteller', 'Trustly', 'Paysafecard', 'MuchBetter', 'Rapid Transfer'];
 const STATUSES: Status[] = ['Completed', 'Pending', 'Failed', 'Disputed'];
@@ -139,17 +139,26 @@ export const generateMockData = (count: number = 50): Transaction[] => {
       currency = Math.random() > 0.7 ? 'GBP' : 'EUR';
     }
 
+    const timestamp = startOfMinute(subDays(now, Math.floor(Math.random() * 90)));
+    const scheduledSettlementDate = addDays(timestamp, 3);
+    const isSettled = status === 'Completed' && Math.random() > 0.3;
+    const actualSettlementDate = isSettled ? addDays(scheduledSettlementDate, Math.floor(Math.random() * 2)) : undefined;
+    const settlementStatus: SettlementStatus = isSettled ? 'Settled' : (isBefore(scheduledSettlementDate, now) ? 'Overdue' : 'Scheduled');
+
     data.push({
       id: (i + 1).toString(),
       txnId: generateTxnId(),
-      timestamp: startOfMinute(subDays(now, Math.floor(Math.random() * 90))),
+      timestamp,
       client: getRandom(CLIENTS),
       brand: getRandom(BRANDS),
       gateway,
       amount: Math.floor(Math.random() * 14990) + 10,
       currency,
       status,
-      recon
+      recon,
+      settlementStatus,
+      scheduledSettlementDate,
+      actualSettlementDate
     });
   }
 

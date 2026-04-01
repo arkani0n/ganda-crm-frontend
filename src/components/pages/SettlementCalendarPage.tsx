@@ -57,6 +57,8 @@ export const SettlementCalendarPage = ({
   const [editingSettlement, setEditingSettlement] = React.useState<Settlement | null>(null);
   const [selectedSettlement, setSelectedSettlement] = React.useState<Settlement | null>(null);
   const [hoveredSettlement, setHoveredSettlement] = React.useState<{ s: Settlement, pos: { top: number, left: number } } | null>(null);
+  const [isTooltipHovered, setIsTooltipHovered] = React.useState(false);
+  const closeTimerRef = React.useRef<number | null>(null);
   const [bannerDismissed, setBannerDismissed] = React.useState(false);
 
   const overdueSettlements = React.useMemo(() => 
@@ -83,6 +85,11 @@ export const SettlementCalendarPage = ({
   };
 
   const handleSettlementHover = (e: React.MouseEvent, s: Settlement) => {
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    
     const rect = e.currentTarget.getBoundingClientRect();
     setHoveredSettlement({
       s,
@@ -91,6 +98,29 @@ export const SettlementCalendarPage = ({
         left: rect.left + rect.width / 2 - 110 // Center horizontally
       }
     });
+  };
+
+  const handleSettlementLeave = () => {
+    closeTimerRef.current = window.setTimeout(() => {
+      if (!isTooltipHovered) {
+        setHoveredSettlement(null);
+      }
+    }, 150);
+  };
+
+  const handleTooltipMouseEnter = () => {
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setIsTooltipHovered(true);
+  };
+
+  const handleTooltipMouseLeave = () => {
+    setIsTooltipHovered(false);
+    closeTimerRef.current = window.setTimeout(() => {
+      setHoveredSettlement(null);
+    }, 150);
   };
 
   const handleMarkReceived = (s: Settlement) => {
@@ -193,7 +223,7 @@ export const SettlementCalendarPage = ({
             settlements={settlements}
             onSettlementClick={setSelectedSettlement}
             onSettlementHover={handleSettlementHover}
-            onSettlementLeave={() => setHoveredSettlement(null)}
+            onSettlementLeave={handleSettlementLeave}
           />
         )}
         {view === 'Week' && (
@@ -202,7 +232,7 @@ export const SettlementCalendarPage = ({
             settlements={settlements}
             onSettlementClick={setSelectedSettlement}
             onSettlementHover={handleSettlementHover}
-            onSettlementLeave={() => setHoveredSettlement(null)}
+            onSettlementLeave={handleSettlementLeave}
           />
         )}
         {view === 'List' && (
@@ -223,6 +253,8 @@ export const SettlementCalendarPage = ({
             onMarkReceived={handleMarkReceived}
             onEdit={(s) => { setEditingSettlement(s); setShowFormModal(true); setHoveredSettlement(null); }}
             onDelete={(id) => { onDeleteSettlement(id); setHoveredSettlement(null); }}
+            onMouseEnter={handleTooltipMouseEnter}
+            onMouseLeave={handleTooltipMouseLeave}
           />
         )}
       </div>
