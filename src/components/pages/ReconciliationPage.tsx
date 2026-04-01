@@ -78,27 +78,9 @@ export const ReconciliationPage = ({
   return (
     <div className="flex flex-col gap-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-[24px] font-bold text-text-primary tracking-tight">Reconciliation</h1>
-          <p className="text-[13px] text-text-tertiary">Match internal transaction records with external gateway settlement reports.</p>
-        </div>
-        {reconResults.length > 0 && (
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={onExportRecon}
-              className="flex items-center gap-2 px-4 py-2.5 border border-border-subtle rounded-lg text-[13px] font-medium text-text-secondary hover:bg-white hover:text-text-primary transition-all"
-            >
-              <Download size={16} /> Export Results
-            </button>
-            <button 
-              onClick={onClearRecon}
-              className="flex items-center gap-2 px-4 py-2.5 border border-border-subtle rounded-lg text-[13px] font-medium text-red-600 hover:bg-red-50 transition-all"
-            >
-              <Trash2 size={16} /> Clear
-            </button>
-          </div>
-        )}
+      <div className="flex flex-col gap-1">
+        <h1 className="text-[24px] font-bold text-text-primary tracking-tight">Reconciliation</h1>
+        <p className="text-[13px] text-text-tertiary">Match internal transaction records with external gateway settlement reports.</p>
       </div>
 
       {!pspFile ? (
@@ -145,12 +127,9 @@ export const ReconciliationPage = ({
         /* Active State */
         <div className="flex flex-col gap-6">
           {/* Config Bar */}
-          <div className="bg-white border border-border-subtle rounded-2xl p-6 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="bg-white border border-border-subtle rounded-xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-50 text-green-600 rounded-lg flex items-center justify-center">
-                  <FileText size={20} />
-                </div>
                 <div className="flex flex-col">
                   <span className="text-[13px] font-bold text-text-primary">{pspFile.name}</span>
                   <span className="text-[11px] text-text-tertiary">{pspFile.rows} records found</span>
@@ -160,7 +139,7 @@ export const ReconciliationPage = ({
                 </button>
               </div>
               
-              <div className="h-8 w-px bg-border-subtle hidden lg:block" />
+              <div className="h-6 w-px bg-border-subtle hidden lg:block" />
               
               <div className="flex items-center gap-4">
                 <div className="flex flex-col gap-1">
@@ -195,10 +174,10 @@ export const ReconciliationPage = ({
               onClick={() => onRunRecon(reconGateway, reconMatchBy)}
               disabled={isReconciling}
               className={cn(
-                "flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-[14px] font-bold transition-all shadow-lg",
+                "flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-[13px] font-bold transition-all",
                 isReconciling 
                   ? "bg-bg-page text-text-tertiary cursor-not-allowed" 
-                  : "bg-accent-interactive text-white hover:bg-accent-interactive/90 shadow-accent-interactive/20"
+                  : "bg-accent-interactive text-white hover:bg-accent-interactive/90"
               )}
             >
               {isReconciling ? (
@@ -208,8 +187,8 @@ export const ReconciliationPage = ({
                 </>
               ) : (
                 <>
-                  <Play size={18} />
-                  Run Reconciliation
+                  <Play size={16} />
+                  Run Matching
                 </>
               )}
             </button>
@@ -258,15 +237,30 @@ export const ReconciliationPage = ({
                       </button>
                     ))}
                   </div>
-                  <div className="relative w-full sm:w-64">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
-                    <input 
-                      type="text" 
-                      placeholder="Search results..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 bg-white border border-border-subtle rounded-lg text-[12px] focus:outline-none focus:ring-1 focus:ring-accent-interactive focus:border-accent-interactive transition-all"
-                    />
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-full sm:w-64">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+                      <input 
+                        type="text" 
+                        placeholder="Search results..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 bg-white border border-border-subtle rounded-lg text-[12px] focus:outline-none focus:ring-1 focus:ring-accent-interactive focus:border-accent-interactive transition-all"
+                      />
+                    </div>
+                    <div className="h-6 w-px bg-border-subtle hidden sm:block" />
+                    <button 
+                      onClick={onExportRecon}
+                      className="flex items-center gap-2 px-3 py-2 border border-border-subtle rounded-lg text-[11px] font-bold text-text-secondary hover:bg-white hover:text-text-primary transition-all"
+                    >
+                      <Download size={14} /> Export
+                    </button>
+                    <button 
+                      onClick={onClearRecon}
+                      className="flex items-center gap-2 px-3 py-2 border border-border-subtle rounded-lg text-[11px] font-bold text-red-600 hover:bg-red-50 transition-all"
+                    >
+                      <Trash2 size={14} /> Clear
+                    </button>
                   </div>
                 </div>
 

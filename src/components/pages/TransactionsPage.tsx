@@ -473,7 +473,15 @@ export const TransactionsPage = ({
                   )}
                   {visibleColumns.includes('Recon') && (
                     <td className="px-6 py-4">
-                      <Badge variant={txn.recon === 'Pending' ? 'ReconPending' : txn.recon}>{txn.recon}</Badge>
+                      <span className={cn(
+                        "text-[12px] font-bold",
+                        txn.recon === 'Matched' ? "text-green-600" :
+                        txn.recon === 'Unmatched' ? "text-red-600" :
+                        txn.recon === 'Pending' ? "text-amber-600" :
+                        "text-text-tertiary"
+                      )}>
+                        {txn.recon}
+                      </span>
                     </td>
                   )}
                   <td className="px-6 py-4 text-right">
