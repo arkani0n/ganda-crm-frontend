@@ -7,6 +7,7 @@ import {
   Eye,
   EyeOff,
   RefreshCw,
+  Activity,
   History,
   Power,
   CheckCircle2,
@@ -166,7 +167,7 @@ export const PSPConfigPage = ({
           {pspConfigs.map((psp) => (
             <div key={psp.id} className="bg-white border border-border-subtle rounded-xl shadow-sm hover:border-accent-interactive/30 transition-all flex flex-col overflow-hidden">
               {/* Card Header */}
-              <div className="p-5 flex items-start justify-between border-b border-border-subtle/50">
+              <div className="p-5 flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div 
                     className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-[16px] shadow-sm"
@@ -196,8 +197,10 @@ export const PSPConfigPage = ({
                 </button>
               </div>
 
+              <div className="h-px bg-border-subtle mx-5" />
+
               {/* Fee Section */}
-              <div className="px-5 py-4 grid grid-cols-3 gap-2 border-b border-border-subtle/50 bg-bg-page/30">
+              <div className="px-5 py-4 grid grid-cols-3 gap-2">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[9px] font-bold text-text-tertiary uppercase">Processing</span>
                   <span className="text-[12px] font-bold text-text-secondary">{psp.processingFeePercent}% + {psp.processingFeeFixed}</span>
@@ -212,8 +215,10 @@ export const PSPConfigPage = ({
                 </div>
               </div>
 
+              <div className="h-px bg-border-subtle mx-5" />
+
               {/* Settlement Section */}
-              <div className="px-5 py-4 flex flex-col gap-3 border-b border-border-subtle/50">
+              <div className="px-5 py-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <Clock size={12} className="text-text-tertiary" />
@@ -235,8 +240,10 @@ export const PSPConfigPage = ({
                 </div>
               </div>
 
+              <div className="h-px bg-border-subtle mx-5" />
+
               {/* API Snippet Section */}
-              <div className="px-5 py-4 flex flex-col gap-2.5 bg-bg-page/20">
+              <div className="px-5 py-4 flex flex-col gap-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col gap-0.5 overflow-hidden">
                     <span className="text-[9px] font-bold text-text-tertiary uppercase">Endpoint</span>
@@ -244,7 +251,7 @@ export const PSPConfigPage = ({
                   </div>
                   <button 
                     onClick={() => copyToClipboard(psp.endpoint)}
-                    className="p-1.5 text-text-tertiary hover:text-accent-interactive hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-border-subtle"
+                    className="p-1.5 text-text-tertiary hover:text-accent-interactive hover:bg-bg-page rounded-md transition-all shadow-sm border border-transparent hover:border-border-subtle"
                   >
                     <Copy size={12} />
                   </button>
@@ -259,13 +266,13 @@ export const PSPConfigPage = ({
                   <div className="flex items-center gap-1">
                     <button 
                       onClick={() => toggleApiKey(psp.id)}
-                      className="p-1.5 text-text-tertiary hover:text-accent-interactive hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-border-subtle"
+                      className="p-1.5 text-text-tertiary hover:text-accent-interactive hover:bg-bg-page rounded-md transition-all shadow-sm border border-transparent hover:border-border-subtle"
                     >
                       {showApiKey[psp.id] ? <EyeOff size={12} /> : <Eye size={12} />}
                     </button>
                     <button 
                       onClick={() => copyToClipboard(psp.apiKey)}
-                      className="p-1.5 text-text-tertiary hover:text-accent-interactive hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-border-subtle"
+                      className="p-1.5 text-text-tertiary hover:text-accent-interactive hover:bg-bg-page rounded-md transition-all shadow-sm border border-transparent hover:border-border-subtle"
                     >
                       <Copy size={12} />
                     </button>
@@ -274,7 +281,7 @@ export const PSPConfigPage = ({
               </div>
 
               {/* Footer Actions */}
-              <div className="mt-auto p-4 bg-bg-page/50 border-t border-border-subtle flex flex-col gap-3">
+              <div className="mt-auto p-4 border-t border-border-subtle flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className={cn(
@@ -301,7 +308,7 @@ export const PSPConfigPage = ({
                     disabled={pinging[psp.id]}
                     className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-white border border-border-subtle rounded-lg text-[11px] font-bold text-text-secondary hover:bg-bg-page transition-all"
                   >
-                    <RefreshCw size={12} className={cn(pinging[psp.id] && "animate-spin")} /> Ping
+                    {pinging[psp.id] ? <RefreshCw size={12} className="animate-spin" /> : <Activity size={12} />} Ping
                   </button>
                   <button 
                     onClick={() => onEditPsp(psp)}
@@ -471,7 +478,7 @@ export const PSPConfigPage = ({
                           className="p-1.5 text-text-tertiary hover:text-accent-interactive hover:bg-accent-hover/20 rounded-md transition-all"
                           title="Ping"
                         >
-                          <RefreshCw size={14} className={cn(pinging[psp.id] && "animate-spin")} />
+                          {pinging[psp.id] ? <RefreshCw size={14} className="animate-spin" /> : <Activity size={14} />}
                         </button>
                         <button 
                           onClick={() => onEditPsp(psp)}
