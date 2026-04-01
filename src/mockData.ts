@@ -1,5 +1,5 @@
-import { Transaction, Gateway, Status, ReconStatus, Currency, Brand, PSPConfig, PSPHistoryEntry } from './types';
-import { subDays, startOfMinute, subHours } from 'date-fns';
+import { Transaction, Gateway, Status, ReconStatus, Currency, Brand, PSPConfig, PSPHistoryEntry, Settlement, SettlementStatus } from './types';
+import { subDays, startOfMinute, subHours, addDays, startOfDay } from 'date-fns';
 
 const GATEWAYS: Gateway[] = ['Stripe', 'PayPal', 'Skrill', 'Neteller', 'Trustly', 'Paysafecard', 'MuchBetter', 'Rapid Transfer'];
 const STATUSES: Status[] = ['Completed', 'Pending', 'Failed', 'Disputed'];
@@ -13,253 +13,62 @@ export const generatePSPMockData = (): PSPConfig[] => {
     {
       id: 'psp-1',
       name: 'Stripe',
-      category: 'Card Payments',
+      type: 'Gateway',
       status: 'Active',
-      logoColor: 'bg-blue-600',
-      processingFeePercent: 2.5,
-      processingFeeFixed: 0.25,
-      processingFeeCurrency: 'EUR',
-      refundFeePercent: 1.0,
-      chargebackFee: 15.00,
-      chargebackFeeCurrency: 'EUR',
-      fxMarkupPercent: 0.5,
-      minTxn: 1.00,
-      maxTxn: 10000.00,
-      frequency: 'Weekly',
-      settlementDay: 'Monday',
-      currencies: ['EUR', 'USD', 'GBP'],
-      rollingReservePercent: 5,
-      rollingReserveDays: 180,
-      settlementDelayDays: 7,
-      environment: 'Live',
-      endpoint: 'https://api.stripe.com/v1',
-      apiKey: 'sk_live_51Mz9X2L7vR8kPqW1',
-      apiSecret: 'whsec_51Mz9X2L7vR8kPqW1',
-      webhookUrl: 'https://api.settlex.com/webhooks/stripe',
-      webhookSecret: 'whsec_test_secret',
-      ipWhitelist: '34.231.12.1\n34.231.12.2',
-      lastTested: subHours(now, 2),
-      connectionStatus: 'Online',
-      countries: 'Global',
+      lastSync: subHours(now, 2),
+      config: {
+        endpoint: 'https://api.stripe.com/v1',
+        apiKey: 'sk_live_••••••••',
+        webhookUrl: 'https://api.settlex.com/webhooks/stripe'
+      }
     },
     {
       id: 'psp-2',
       name: 'PayPal',
-      category: 'E-Wallet',
+      type: 'E-Wallet',
       status: 'Active',
-      logoColor: 'bg-indigo-600',
-      processingFeePercent: 3.4,
-      processingFeeFixed: 0.35,
-      processingFeeCurrency: 'USD',
-      refundFeePercent: 0.0,
-      chargebackFee: 20.00,
-      chargebackFeeCurrency: 'USD',
-      fxMarkupPercent: 1.2,
-      minTxn: 0.50,
-      maxTxn: 5000.00,
-      frequency: 'Daily',
-      currencies: ['USD', 'EUR', 'GBP', 'AUD'],
-      rollingReservePercent: 3,
-      rollingReserveDays: 90,
-      settlementDelayDays: 1,
-      environment: 'Live',
-      endpoint: 'https://api.paypal.com/v2',
-      apiKey: 'access_token_live_paypal_123',
-      apiSecret: 'client_secret_live_paypal_456',
-      webhookUrl: 'https://api.settlex.com/webhooks/paypal',
-      webhookSecret: 'paypal_webhook_secret',
-      ipWhitelist: '173.0.80.0/20',
-      lastTested: subDays(now, 1),
-      connectionStatus: 'Online',
-      countries: 'Global',
+      lastSync: subDays(now, 1),
+      config: {
+        endpoint: 'https://api.paypal.com/v2',
+        apiKey: 'access_token_••••••••',
+        webhookUrl: 'https://api.settlex.com/webhooks/paypal'
+      }
     },
     {
       id: 'psp-3',
       name: 'Skrill',
-      category: 'E-Wallet',
+      type: 'E-Wallet',
       status: 'Active',
-      logoColor: 'bg-purple-600',
-      processingFeePercent: 1.9,
-      processingFeeFixed: 0.00,
-      processingFeeCurrency: 'EUR',
-      refundFeePercent: 0.5,
-      chargebackFee: 25.00,
-      chargebackFeeCurrency: 'EUR',
-      fxMarkupPercent: 0.8,
-      minTxn: 10.00,
-      maxTxn: 20000.00,
-      frequency: 'Weekly',
-      settlementDay: 'Wednesday',
-      currencies: ['EUR', 'USD', 'GBP', 'PLN'],
-      rollingReservePercent: 0,
-      rollingReserveDays: 0,
-      settlementDelayDays: 3,
-      environment: 'Live',
-      endpoint: 'https://www.skrill.com/app',
-      apiKey: 'skrill_api_key_789',
-      apiSecret: 'skrill_secret_012',
-      webhookUrl: 'https://api.settlex.com/webhooks/skrill',
-      webhookSecret: 'skrill_webhook_secret',
-      ipWhitelist: '195.12.12.0/24',
-      lastTested: subDays(now, 3),
-      connectionStatus: 'Online',
-      countries: 'Europe, UK',
+      lastSync: subDays(now, 3),
+      config: {
+        endpoint: 'https://www.skrill.com/app',
+        apiKey: 'skrill_api_••••••••',
+        webhookUrl: 'https://api.settlex.com/webhooks/skrill'
+      }
     },
     {
       id: 'psp-4',
       name: 'Neteller',
-      category: 'E-Wallet',
+      type: 'E-Wallet',
       status: 'Active',
-      logoColor: 'bg-emerald-600',
-      processingFeePercent: 2.5,
-      processingFeeFixed: 0.00,
-      processingFeeCurrency: 'USD',
-      refundFeePercent: 1.0,
-      chargebackFee: 30.00,
-      chargebackFeeCurrency: 'USD',
-      fxMarkupPercent: 1.0,
-      minTxn: 5.00,
-      maxTxn: 15000.00,
-      frequency: 'Weekly',
-      settlementDay: 'Friday',
-      currencies: ['USD', 'EUR', 'GBP', 'CAD'],
-      rollingReservePercent: 0,
-      rollingReserveDays: 0,
-      settlementDelayDays: 5,
-      environment: 'Live',
-      endpoint: 'https://api.neteller.com/v1',
-      apiKey: 'neteller_key_345',
-      apiSecret: 'neteller_secret_678',
-      webhookUrl: 'https://api.settlex.com/webhooks/neteller',
-      webhookSecret: 'neteller_webhook_secret',
-      ipWhitelist: '213.12.12.0/24',
-      lastTested: undefined,
-      connectionStatus: 'Never',
-      countries: 'Global',
+      lastSync: subDays(now, 5),
+      config: {
+        endpoint: 'https://api.neteller.com/v1',
+        apiKey: 'neteller_••••••••',
+        webhookUrl: 'https://api.settlex.com/webhooks/neteller'
+      }
     },
     {
       id: 'psp-5',
       name: 'Trustly',
-      category: 'Open Banking',
+      type: 'Bank',
       status: 'Active',
-      logoColor: 'bg-teal-600',
-      processingFeePercent: 1.0,
-      processingFeeFixed: 0.15,
-      processingFeeCurrency: 'EUR',
-      refundFeePercent: 0.0,
-      chargebackFee: 0.00,
-      chargebackFeeCurrency: 'EUR',
-      fxMarkupPercent: 0.3,
-      minTxn: 1.00,
-      maxTxn: 50000.00,
-      frequency: 'Daily',
-      currencies: ['EUR', 'SEK', 'NOK'],
-      rollingReservePercent: 0,
-      rollingReserveDays: 0,
-      settlementDelayDays: 1,
-      environment: 'Live',
-      endpoint: 'https://api.trustly.com/1',
-      apiKey: 'trustly_username_901',
-      apiSecret: 'trustly_password_234',
-      webhookUrl: 'https://api.settlex.com/webhooks/trustly',
-      webhookSecret: 'trustly_webhook_secret',
-      ipWhitelist: '91.212.12.0/24',
-      lastTested: subHours(now, 5),
-      connectionStatus: 'Online',
-      countries: 'Europe, Scandinavia',
-    },
-    {
-      id: 'psp-6',
-      name: 'Paysafecard',
-      category: 'Voucher',
-      status: 'Inactive',
-      logoColor: 'bg-pink-600',
-      processingFeePercent: 3.0,
-      processingFeeFixed: 0.00,
-      processingFeeCurrency: 'EUR',
-      refundFeePercent: 2.0,
-      chargebackFee: 0.00,
-      chargebackFeeCurrency: 'EUR',
-      fxMarkupPercent: 2.0,
-      minTxn: 10.00,
-      maxTxn: 1000.00,
-      frequency: 'Monthly',
-      currencies: ['EUR', 'USD', 'GBP', 'CZK'],
-      rollingReservePercent: 0,
-      rollingReserveDays: 0,
-      settlementDelayDays: 30,
-      environment: 'Sandbox',
-      endpoint: 'https://api.paysafecard.com/v1',
-      apiKey: 'psc_test_key_567',
-      apiSecret: 'psc_test_secret_890',
-      webhookUrl: 'https://api.settlex.com/webhooks/psc',
-      webhookSecret: 'psc_webhook_secret',
-      ipWhitelist: '185.12.12.0/24',
-      lastTested: subDays(now, 14),
-      connectionStatus: 'Offline',
-      countries: 'Global',
-    },
-    {
-      id: 'psp-7',
-      name: 'MuchBetter',
-      category: 'E-Wallet',
-      status: 'Active',
-      logoColor: 'bg-orange-600',
-      processingFeePercent: 1.5,
-      processingFeeFixed: 0.10,
-      processingFeeCurrency: 'GBP',
-      refundFeePercent: 0.5,
-      chargebackFee: 10.00,
-      chargebackFeeCurrency: 'GBP',
-      fxMarkupPercent: 0.5,
-      minTxn: 1.00,
-      maxTxn: 10000.00,
-      frequency: 'Bi-weekly',
-      currencies: ['GBP', 'EUR'],
-      rollingReservePercent: 0,
-      rollingReserveDays: 0,
-      settlementDelayDays: 14,
-      environment: 'Live',
-      endpoint: 'https://api.muchbetter.com/merchant',
-      apiKey: 'mb_api_key_123',
-      apiSecret: 'mb_api_secret_456',
-      webhookUrl: 'https://api.settlex.com/webhooks/muchbetter',
-      webhookSecret: 'mb_webhook_secret',
-      ipWhitelist: '52.12.12.0/24',
-      lastTested: subDays(now, 1),
-      connectionStatus: 'Online',
-      countries: 'Global',
-    },
-    {
-      id: 'psp-8',
-      name: 'Rapid Transfer',
-      category: 'Bank Transfer',
-      status: 'Active',
-      logoColor: 'bg-cyan-600',
-      processingFeePercent: 0.8,
-      processingFeeFixed: 0.20,
-      processingFeeCurrency: 'EUR',
-      refundFeePercent: 0.0,
-      chargebackFee: 5.00,
-      chargebackFeeCurrency: 'EUR',
-      fxMarkupPercent: 0.2,
-      minTxn: 1.00,
-      maxTxn: 25000.00,
-      frequency: 'Daily',
-      currencies: ['EUR', 'USD', 'SEK', 'PLN'],
-      rollingReservePercent: 0,
-      rollingReserveDays: 0,
-      settlementDelayDays: 2,
-      environment: 'Live',
-      endpoint: 'https://api.rapidtransfer.com/v2',
-      apiKey: 'rt_api_key_789',
-      apiSecret: 'rt_api_secret_012',
-      webhookUrl: 'https://api.settlex.com/webhooks/rapidtransfer',
-      webhookSecret: 'rt_webhook_secret',
-      ipWhitelist: '195.12.12.0/24',
-      lastTested: subHours(now, 4),
-      connectionStatus: 'Online',
-      countries: 'Europe',
+      lastSync: subHours(now, 5),
+      config: {
+        endpoint: 'https://api.trustly.com/1',
+        apiKey: 'trustly_••••••••',
+        webhookUrl: 'https://api.settlex.com/webhooks/trustly'
+      }
     }
   ];
 };
@@ -300,11 +109,11 @@ function generateTxnId(): string {
   return result;
 }
 
-export const generateMockData = (): Transaction[] => {
+export const generateMockData = (count: number = 50): Transaction[] => {
   const data: Transaction[] = [];
   const now = new Date();
 
-  for (let i = 0; i < 47; i++) {
+  for (let i = 0; i < count; i++) {
     const gateway = getRandom(GATEWAYS);
     
     // Status distribution: ~55% Completed, ~20% Pending, ~15% Failed, ~10% Disputed
@@ -346,3 +155,172 @@ export const generateMockData = (): Transaction[] => {
 
   return data.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 };
+
+export const generateSettlementMockData = (): Settlement[] => {
+  const now = startOfDay(new Date());
+  const settlements: Settlement[] = [];
+  
+  // 12 entries last month: all status Settled, 3 with small variances
+  for (let i = 0; i < 12; i++) {
+    const gateway = getRandom(GATEWAYS);
+    const expectedAmount = getAmountRange(gateway);
+    const variance = i < 3 ? (Math.random() > 0.5 ? 50 + Math.random() * 150 : -50 - Math.random() * 150) : 0;
+    const expectedDate = subDays(now, 15 + i * 2);
+    
+    settlements.push({
+      id: `stl-prev-${i}`,
+      settlementNo: `STL-${1000 + i}`,
+      psp: gateway,
+      brand: getRandom(BRANDS),
+      expectedDate,
+      expectedAmount,
+      currency: 'EUR',
+      netExpected: expectedAmount * (gateway === 'Stripe' ? 0.95 : gateway === 'PayPal' ? 0.97 : 1),
+      rollingReserve: gateway === 'Stripe' ? expectedAmount * 0.05 : gateway === 'PayPal' ? expectedAmount * 0.03 : 0,
+      status: 'Settled',
+      actualReceivedDate: subDays(expectedDate, Math.floor(Math.random() * 2)),
+      actualAmountReceived: expectedAmount + variance,
+      variance,
+      timeline: [
+        { status: 'Scheduled', timestamp: subDays(expectedDate, 7) },
+        { status: 'Pending', timestamp: expectedDate },
+        { status: 'Settled', timestamp: subDays(expectedDate, Math.floor(Math.random() * 2)) }
+      ]
+    });
+  }
+
+  // 16 entries current month
+  // 6 Settled (first half)
+  for (let i = 0; i < 6; i++) {
+    const gateway = getRandom(GATEWAYS);
+    const expectedAmount = getAmountRange(gateway);
+    const expectedDate = subDays(now, 5 + i * 2);
+    settlements.push({
+      id: `stl-curr-settled-${i}`,
+      settlementNo: `STL-${1012 + i}`,
+      psp: gateway,
+      brand: getRandom(BRANDS),
+      expectedDate,
+      expectedAmount,
+      currency: 'EUR',
+      netExpected: expectedAmount * (gateway === 'Stripe' ? 0.95 : gateway === 'PayPal' ? 0.97 : 1),
+      rollingReserve: gateway === 'Stripe' ? expectedAmount * 0.05 : gateway === 'PayPal' ? expectedAmount * 0.03 : 0,
+      status: 'Settled',
+      actualReceivedDate: expectedDate,
+      actualAmountReceived: expectedAmount,
+      variance: 0,
+      timeline: [
+        { status: 'Scheduled', timestamp: subDays(expectedDate, 7) },
+        { status: 'Settled', timestamp: expectedDate }
+      ]
+    });
+  }
+
+  // 3 Pending (due today +- 2 days)
+  const pendingOffsets = [-1, 0, 1];
+  for (let i = 0; i < 3; i++) {
+    const gateway = getRandom(GATEWAYS);
+    const expectedAmount = getAmountRange(gateway);
+    const expectedDate = addDays(now, pendingOffsets[i]);
+    settlements.push({
+      id: `stl-curr-pending-${i}`,
+      settlementNo: `STL-${1018 + i}`,
+      psp: gateway,
+      brand: getRandom(BRANDS),
+      expectedDate,
+      expectedAmount,
+      currency: 'EUR',
+      netExpected: expectedAmount * (gateway === 'Stripe' ? 0.95 : gateway === 'PayPal' ? 0.97 : 1),
+      rollingReserve: gateway === 'Stripe' ? expectedAmount * 0.05 : gateway === 'PayPal' ? expectedAmount * 0.03 : 0,
+      status: 'Pending',
+      timeline: [
+        { status: 'Scheduled', timestamp: subDays(expectedDate, 7) },
+        { status: 'Pending', timestamp: subDays(now, 1) }
+      ]
+    });
+  }
+
+  // 2 Overdue (3-7 days late, Stripe and Neteller)
+  const overdueGateways: Gateway[] = ['Stripe', 'Neteller'];
+  for (let i = 0; i < 2; i++) {
+    const gateway = overdueGateways[i];
+    const expectedAmount = getAmountRange(gateway);
+    const expectedDate = subDays(now, 4 + i * 2);
+    settlements.push({
+      id: `stl-curr-overdue-${i}`,
+      settlementNo: `STL-${1021 + i}`,
+      psp: gateway,
+      brand: getRandom(BRANDS),
+      expectedDate,
+      expectedAmount,
+      currency: 'EUR',
+      netExpected: expectedAmount * (gateway === 'Stripe' ? 0.95 : 1),
+      rollingReserve: gateway === 'Stripe' ? expectedAmount * 0.05 : 0,
+      status: 'Overdue',
+      timeline: [
+        { status: 'Scheduled', timestamp: subDays(expectedDate, 7) },
+        { status: 'Pending', timestamp: expectedDate }
+      ]
+    });
+  }
+
+  // 5 Scheduled (second half of month)
+  for (let i = 0; i < 5; i++) {
+    const gateway = getRandom(GATEWAYS);
+    const expectedAmount = getAmountRange(gateway);
+    const expectedDate = addDays(now, 5 + i * 3);
+    settlements.push({
+      id: `stl-curr-sched-${i}`,
+      settlementNo: `STL-${1023 + i}`,
+      psp: gateway,
+      brand: getRandom(BRANDS),
+      expectedDate,
+      expectedAmount,
+      currency: 'EUR',
+      netExpected: expectedAmount * (gateway === 'Stripe' ? 0.95 : gateway === 'PayPal' ? 0.97 : 1),
+      rollingReserve: gateway === 'Stripe' ? expectedAmount * 0.05 : gateway === 'PayPal' ? expectedAmount * 0.03 : 0,
+      status: 'Scheduled',
+      timeline: [
+        { status: 'Scheduled', timestamp: subDays(now, 2) }
+      ]
+    });
+  }
+
+  // 7 entries next month: all Scheduled
+  for (let i = 0; i < 7; i++) {
+    const gateway = getRandom(GATEWAYS);
+    const expectedAmount = getAmountRange(gateway);
+    const expectedDate = addDays(now, 25 + i * 2);
+    settlements.push({
+      id: `stl-next-sched-${i}`,
+      settlementNo: `STL-${1028 + i}`,
+      psp: gateway,
+      brand: getRandom(BRANDS),
+      expectedDate,
+      expectedAmount,
+      currency: 'EUR',
+      netExpected: expectedAmount * (gateway === 'Stripe' ? 0.95 : gateway === 'PayPal' ? 0.97 : 1),
+      rollingReserve: gateway === 'Stripe' ? expectedAmount * 0.05 : gateway === 'PayPal' ? expectedAmount * 0.03 : 0,
+      status: 'Scheduled',
+      timeline: [
+        { status: 'Scheduled', timestamp: now }
+      ]
+    });
+  }
+
+  return settlements;
+};
+
+function getAmountRange(gateway: Gateway): number {
+  switch (gateway) {
+    case 'Stripe': return 8000 + Math.random() * 17000;
+    case 'PayPal': return 5000 + Math.random() * 13000;
+    case 'Skrill': return 3000 + Math.random() * 9000;
+    case 'Neteller': return 4000 + Math.random() * 11000;
+    case 'Trustly': return 6000 + Math.random() * 14000;
+    case 'Paysafecard': return 2000 + Math.random() * 6000;
+    case 'MuchBetter': return 1500 + Math.random() * 4500;
+    case 'Rapid Transfer': return 3000 + Math.random() * 7000;
+    default: return 5000;
+  }
+}

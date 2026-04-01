@@ -18,49 +18,24 @@ export interface PSPHistoryEntry {
   newValue: string;
 }
 
+export interface TransactionFilters {
+  dateRange: { start: Date | null, end: Date | null };
+  gateways: string[];
+  brands: string[];
+  status: Status | 'All';
+}
+
 export interface PSPConfig {
   id: string;
   name: string;
-  category: PSPCategory;
+  type: 'Gateway' | 'Acquirer' | 'E-Wallet' | 'Bank';
   status: PSPStatus;
-  logoColor: string;
-  
-  // Fees
-  processingFeePercent: number;
-  processingFeeFixed: number;
-  processingFeeCurrency: string;
-  refundFeePercent: number;
-  chargebackFee: number;
-  chargebackFeeCurrency: string;
-  fxMarkupPercent: number;
-  minTxn: number;
-  maxTxn: number;
-  
-  // Settlement
-  frequency: SettlementFrequency;
-  settlementDay?: string;
-  currencies: string[];
-  rollingReservePercent: number;
-  rollingReserveDays: number;
-  settlementDelayDays: number;
-  settlementNotes?: string;
-  
-  // API
-  environment: 'Live' | 'Sandbox';
-  endpoint: string;
-  apiKey: string;
-  apiSecret: string;
-  webhookUrl: string;
-  webhookSecret: string;
-  ipWhitelist: string;
-  
-  // Status
-  lastTested?: Date;
-  connectionStatus?: 'Online' | 'Offline' | 'Never';
-  
-  // General
-  countries: string;
-  notes?: string;
+  lastSync: Date;
+  config: {
+    endpoint: string;
+    apiKey: string;
+    webhookUrl: string;
+  };
 }
 
 export interface ReconResult {
@@ -76,6 +51,32 @@ export interface ReconResult {
   difference: number;
 }
 
+export type SettlementStatus = 'Scheduled' | 'Pending' | 'Overdue' | 'Settled' | 'Partial' | 'Disputed';
+
+export interface SettlementTimelineEvent {
+  status: SettlementStatus;
+  timestamp: Date;
+  note?: string;
+}
+
+export interface Settlement {
+  id: string;
+  settlementNo: string;
+  psp: Gateway;
+  brand: Brand;
+  expectedDate: Date;
+  expectedAmount: number;
+  currency: Currency;
+  rollingReserve?: number;
+  netExpected: number;
+  status: SettlementStatus;
+  actualReceivedDate?: Date;
+  actualAmountReceived?: number;
+  variance?: number;
+  notes?: string;
+  timeline: SettlementTimelineEvent[];
+}
+
 export interface Transaction {
   id: string;
   txnId: string;
@@ -87,4 +88,17 @@ export interface Transaction {
   currency: Currency;
   status: Status;
   recon: ReconStatus;
+  source?: 'system' | 'manual';
+  batchId?: string;
+  notes?: string;
+}
+
+export interface ImportLog {
+  id: string;
+  filename: string;
+  timestamp: Date;
+  rowCount: number;
+  gateway?: string;
+  method?: string;
+  batchId: string;
 }
