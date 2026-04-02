@@ -310,7 +310,7 @@ export const ReconciliationPage = ({
                 className={cn(
                   "bg-white border p-4 flex flex-col gap-1 text-left transition-all",
                   activeFilter === key
-                    ? "border-border-subtle border-b-white rounded-t-xl mb-[-13px] pb-7 z-10 relative"
+                    ? "border-border-subtle border-b-white rounded-t-xl mb-[-14px] pb-8 z-10 relative"
                     : "border-border-subtle rounded-xl hover:border-text-tertiary"
                 )}
               >
