@@ -294,7 +294,7 @@ export const ReconciliationPage = ({
 
       {/* Results Section */}
       {reconResults.length > 0 && (
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-3">
           {/* Clickable Stats Tab Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-x-3 gap-y-3 lg:gap-y-0 relative z-10 mb-0">
             {([
@@ -310,8 +310,8 @@ export const ReconciliationPage = ({
                 className={cn(
                   "bg-white border p-4 flex flex-col gap-1 text-left transition-all",
                   activeFilter === key
-                    ? "border-border-subtle border-b-white rounded-t-xl mb-[-1px] z-10 relative"
-                    : "border-border-subtle rounded-xl hover:border-text-tertiary mb-0"
+                    ? "border-border-subtle border-b-white rounded-t-xl mb-[-13px] pb-7 z-10 relative"
+                    : "border-border-subtle rounded-xl hover:border-text-tertiary"
                 )}
               >
                 <span className={cn("text-[10px] font-bold uppercase tracking-wider", labelColor)}>{label}</span>
