@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Save, AlertCircle, Info, Eye, EyeOff, Globe, CreditCard, Wallet, Building2, Smartphone, Bitcoin, Ticket } from 'lucide-react';
-import { PSPConfig, PSPCategory, SettlementFrequency, Currency } from '../../types';
+import { X, Save, AlertCircle, Info, Eye, EyeOff, Globe, CreditCard, Wallet, Building2, Smartphone, Bitcoin, Ticket, Plus, Trash2 } from 'lucide-react';
+import { PSPConfig, PSPCategory, SettlementFrequency, Currency, PSPChargebackRules, DisputeReasonCategory } from '../../types';
 import { cn } from '../../lib/utils';
 
 interface PSPConfigModalProps {
@@ -11,7 +11,7 @@ interface PSPConfigModalProps {
   onSave: (psp: PSPConfig) => void;
 }
 
-type Tab = 'General' | 'Fees' | 'Settlement' | 'API';
+type Tab = 'General' | 'Fees' | 'Settlement' | 'API' | 'Chargeback Rules';
 
 export const PSPConfigModal = ({ 
   isOpen, 
@@ -83,7 +83,11 @@ export const PSPConfigModal = ({
         webhookUrl: '',
         webhookSecret: '',
         ipWhitelist: '',
-        connectionStatus: 'Never Tested'
+        connectionStatus: 'Never Tested',
+        chargebackRules: {
+          defaultResponseWindowDays: 30,
+          templates: [],
+        },
       });
     }
     setActiveTab('General');
@@ -142,7 +146,7 @@ export const PSPConfigModal = ({
 
         {/* Tabs */}
         <div className="flex border-b border-border-subtle px-6 bg-bg-page/30">
-          {(['General', 'Fees', 'Settlement', 'API'] as Tab[]).map((tab) => (
+          {(['General', 'Fees', 'Settlement', 'API', 'Chargeback Rules'] as Tab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -506,6 +510,68 @@ export const PSPConfigModal = ({
                   rows={2}
                   className="w-full px-4 py-2 bg-bg-page border border-border-subtle rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-accent-interactive/20 focus:border-accent-interactive transition-all resize-none"
                 />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'Chargeback Rules' && (
+            <div className="flex flex-col gap-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-text-tertiary uppercase tracking-wider">Default Response Window (days)</label>
+                  <input
+                    type="number"
+                    value={draft.chargebackRules?.defaultResponseWindowDays ?? 30}
+                    onChange={(e) => setDraft({
+                      ...draft,
+                      chargebackRules: {
+                        ...draft.chargebackRules!,
+                        defaultResponseWindowDays: parseInt(e.target.value) || 30,
+                      }
+                    })}
+                    className="w-full px-4 py-2 bg-bg-page border border-border-subtle rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-accent-interactive/20 focus:border-accent-interactive transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <label className="text-[11px] font-bold text-text-tertiary uppercase tracking-wider">Per-Reason Overrides (days)</label>
+                {(['Fraud', 'Product not received', 'Not as described', 'Duplicate charge', 'Subscription cancelled', 'Other'] as DisputeReasonCategory[]).map(reason => (
+                  <div key={reason} className="flex items-center gap-3">
+                    <span className="text-[12px] text-text-secondary w-48 flex-shrink-0">{reason}</span>
+                    <input
+                      type="number"
+                      placeholder={`${draft.chargebackRules?.defaultResponseWindowDays ?? 30} (default)`}
+                      value={draft.chargebackRules?.reasonOverrides?.[reason] ?? ''}
+                      onChange={(e) => {
+                        const val = e.target.value ? parseInt(e.target.value) : undefined;
+                        setDraft(prev => ({
+                          ...prev,
+                          chargebackRules: {
+                            ...prev.chargebackRules!,
+                            reasonOverrides: {
+                              ...prev.chargebackRules?.reasonOverrides,
+                              [reason]: val,
+                            },
+                          }
+                        }));
+                      }}
+                      className="w-24 px-3 py-1.5 bg-bg-page border border-border-subtle rounded-lg text-[12px] focus:outline-none focus:ring-1 focus:ring-accent-interactive transition-all"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-3 border-t border-border-subtle">
+                <div className="flex items-center gap-2 mb-3">
+                  <Info size={14} className="text-text-tertiary" />
+                  <span className="text-[11px] text-text-tertiary">
+                    PSP-specific templates can be configured here. If no template is set for a reason category, the system default will be used.
+                  </span>
+                </div>
+                <p className="text-[11px] text-text-tertiary italic">
+                  Template editing for individual reason categories will be available in a future update. Current counter-chargeback documents use system defaults.
+                </p>
               </div>
             </div>
           )}
