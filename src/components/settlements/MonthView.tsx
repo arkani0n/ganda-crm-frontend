@@ -56,7 +56,8 @@ export const MonthView = ({
               key={day.toString()} 
               className={cn(
                 "min-h-[120px] p-2 border-r border-b border-[#F4F4F0] flex flex-col gap-2 transition-colors",
-                !isCurrentMonth && "bg-[#FAFAFA]/50",
+                isTdy && "bg-accent-interactive/10 border-accent-interactive/20",
+                !isCurrentMonth && !isTdy && "bg-[#FAFAFA]/50",
                 isPast && !isTdy && "bg-[#FAFAFA]",
                 isWknd && !isTdy && "bg-[#FAFAFA]/80",
                 idx % 7 === 6 && "border-r-0"
@@ -64,9 +65,9 @@ export const MonthView = ({
             >
               <div className="flex items-start justify-between">
                 <span className={cn(
-                  "text-[12px] font-medium flex items-center justify-center w-6 h-6 rounded-full",
+                  "text-[12px] font-medium",
                   !isCurrentMonth ? "text-[#D0D0D0]" : "text-text-primary",
-                  isTdy && "bg-accent-interactive text-white font-bold"
+                  isTdy && "text-accent-interactive font-bold"
                 )}>
                   {format(day, 'd')}
                 </span>
