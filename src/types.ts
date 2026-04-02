@@ -64,6 +64,9 @@ export interface PSPConfig {
   lastTested?: Date;
   connectionStatus: 'Online' | 'Offline' | 'Never Tested';
   notes?: string;
+
+  // Chargeback Rules
+  chargebackRules?: PSPChargebackRules;
 }
 
 export interface ReconResult {
@@ -132,4 +135,76 @@ export interface ImportLog {
   gateway?: string;
   method?: string;
   batchId: string;
+}
+
+// --- Disputes ---
+
+export type DisputeStatus = 'Open' | 'In Progress' | 'Won' | 'Lost' | 'Accepted';
+
+export type DisputeReasonCategory = 'Fraud' | 'Product not received' | 'Not as described' | 'Duplicate charge' | 'Subscription cancelled' | 'Other';
+
+export type DisputePhase =
+  | 'Transaction created'
+  | 'Settled by PSP'
+  | 'Chargeback issued'
+  | 'Deadline approaching'
+  | 'Deadline urgent'
+  | 'Counter-chargeback submitted'
+  | 'Accepted'
+  | 'Won'
+  | 'Lost';
+
+export interface DisputeTimelineEntry {
+  id: string;
+  timestamp: Date;
+  phase: DisputePhase;
+  description: string;
+  addedBy?: string;
+}
+
+export interface WorthFightingAdvice {
+  recommendation: 'Recommended' | 'Neutral' | 'Low chance';
+  reasoning: string;
+}
+
+export interface Dispute {
+  id: string;
+  transactionId: string;
+  transaction: Transaction;
+  status: DisputeStatus;
+  reasonCategory: DisputeReasonCategory;
+  rawReasonCode?: string;
+  disputeAmount: number;
+  pspFee: number;
+  currency: Currency;
+  openedDate: Date;
+  deadline: Date;
+  resolvedDate?: Date;
+  outcomeAmount?: number;
+  worthFighting: WorthFightingAdvice;
+  notes: string;
+  timeline: DisputeTimelineEntry[];
+}
+
+// --- PSP Chargeback Rules ---
+
+export interface TemplateTextBlock {
+  id: string;
+  title: string;
+  content: string;
+  order: number;
+}
+
+export interface PSPChargebackTemplate {
+  reasonCategory: DisputeReasonCategory;
+  textBlocks: TemplateTextBlock[];
+  requiredEvidence: string[];
+  optionalEvidence: string[];
+  submissionNotes?: string;
+}
+
+export interface PSPChargebackRules {
+  defaultResponseWindowDays: number;
+  reasonOverrides?: Partial<Record<DisputeReasonCategory, number>>;
+  templates: PSPChargebackTemplate[];
 }
