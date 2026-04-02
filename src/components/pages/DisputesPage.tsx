@@ -163,7 +163,7 @@ export const DisputesPage = ({
         <SummaryCard
           label="Total Exposure"
           title="Exposure"
-          value={`€${stats.exposure.toLocaleString()}`}
+          value={stats.exposure.toLocaleString('en-US', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
           icon={DollarSign}
           accentColor="red-600"
         />

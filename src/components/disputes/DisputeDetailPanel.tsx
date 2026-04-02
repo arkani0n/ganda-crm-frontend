@@ -129,10 +129,19 @@ export const DisputeDetailPanel = ({
           <FileText size={14} /> Build Counter-Chargeback
         </button>
         <button
-          onClick={() => onStatusChange(dispute.id, dispute.status)}
-          className="flex items-center gap-2 px-4 py-2 border border-border-subtle rounded-lg text-[12px] font-medium text-text-secondary hover:bg-white transition-all"
+          onClick={() => {
+            const nextStatus = dispute.status === 'Open' ? 'In Progress' :
+                               dispute.status === 'In Progress' ? 'Won' :
+                               dispute.status;
+            if (nextStatus !== dispute.status) onStatusChange(dispute.id, nextStatus);
+          }}
+          disabled={isResolved}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 border border-border-subtle rounded-lg text-[12px] font-medium transition-all",
+            isResolved ? "text-text-tertiary cursor-not-allowed opacity-50" : "text-text-secondary hover:bg-white"
+          )}
         >
-          <ArrowRightLeft size={14} /> Change Status
+          <ArrowRightLeft size={14} /> {isResolved ? 'Resolved' : dispute.status === 'Open' ? 'Start Working' : 'Mark Won'}
         </button>
         <button
           onClick={() => onExportCase(dispute)}

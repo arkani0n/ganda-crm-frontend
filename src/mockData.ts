@@ -451,7 +451,7 @@ export const generateDisputeMockData = (transactions: Transaction[], pspConfigs:
     else if (statusRand < 0.85) status = 'Lost';
     else status = 'Accepted';
 
-    const openedDate = subDays(txn.timestamp, -Math.floor(Math.random() * 5 + 1));
+    const openedDate = addDays(txn.timestamp, Math.floor(Math.random() * 5 + 1));
 
     const pspConfig = pspConfigs.find(p => p.name === txn.gateway);
     const defaultWindowDays = pspConfig?.chargebackRules?.defaultResponseWindowDays ?? 30;
