@@ -1,15 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { subDays, format, startOfDay, endOfDay, differenceInDays } from 'date-fns';
-import { 
-  Transaction, 
-  Gateway, 
-  ReconResult, 
-  PSPConfig, 
+import {
+  Transaction,
+  Gateway,
+  ReconResult,
+  PSPConfig,
   ImportLog,
   Settlement,
-  Brand
+  Brand,
+  Dispute,
+  DisputeStatus
 } from './types';
-import { generateMockData, generateSettlementMockData, generatePSPMockData } from './mockData';
+import { generateMockData, generateSettlementMockData, generatePSPMockData, generateDisputeMockData } from './mockData';
 import { runReconciliationLogic } from './lib/reconciliation/matching';
 
 // Shared Components
@@ -19,6 +21,7 @@ import { Toast } from './components/shared/Toast';
 // Page Components
 import { TransactionsPage } from './components/pages/TransactionsPage';
 import { ReconciliationPage } from './components/pages/ReconciliationPage';
+import { DisputesPage } from './components/pages/DisputesPage';
 import { ReportsPage } from './components/pages/ReportsPage';
 import { PSPConfigPage } from './components/pages/PSPConfigPage';
 import { SettlementCalendarPage } from './components/pages/SettlementCalendarPage';
@@ -30,12 +33,13 @@ import { TransactionDetailsModal } from './components/modals/TransactionDetailsM
 import { ManualMatchModal } from './components/modals/ManualMatchModal';
 import { PSPConfigModal } from './components/modals/PSPConfigModal';
 import { PSPHistoryModal } from './components/modals/PSPHistoryModal';
+import { DisputeTemplateWizard } from './components/disputes/DisputeTemplateWizard';
 
 import { motion, AnimatePresence } from 'motion/react';
 
 const App = () => {
   // --- Global State ---
-  const [activePage, setActivePage] = useState<'Transactions' | 'Reconciliation' | 'Reports' | 'PSP Config' | 'Settlement Calendar'>('Transactions');
+  const [activePage, setActivePage] = useState<'Transactions' | 'Reconciliation' | 'Disputes' | 'Reports' | 'PSP Config' | 'Settlement Calendar'>('Transactions');
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [pspConfigs, setPspConfigs] = useState<PSPConfig[]>([]);
@@ -52,6 +56,10 @@ const App = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyPsp, setHistoryPsp] = useState<PSPConfig | null>(null);
 
+  // --- Dispute States ---
+  const [disputes, setDisputes] = useState<Dispute[]>([]);
+  const [wizardDispute, setWizardDispute] = useState<Dispute | null>(null);
+
   // --- Reconciliation States ---
   const [pspFile, setPspFile] = useState<{ name: string, rows: number, data: any[] } | null>(null);
   const [reconResults, setReconResults] = useState<ReconResult[]>([]);
@@ -59,9 +67,12 @@ const App = () => {
 
   // --- Initial Data ---
   useEffect(() => {
-    setAllTransactions(generateMockData(200));
+    const txns = generateMockData(200);
+    const psps = generatePSPMockData();
+    setAllTransactions(txns);
     setSettlements(generateSettlementMockData());
-    setPspConfigs(generatePSPMockData());
+    setPspConfigs(psps);
+    setDisputes(generateDisputeMockData(txns, psps));
   }, []);
 
   // --- Handlers ---
@@ -212,6 +223,63 @@ const App = () => {
     // In a real app, this would trigger a download
   };
 
+  // --- Dispute Handlers ---
+  const handleDisputeStatusChange = (disputeId: string, newStatus: DisputeStatus) => {
+    setDisputes(prev => prev.map(d => {
+      if (d.id !== disputeId) return d;
+      const now = new Date();
+      const isResolving = ['Won', 'Lost', 'Accepted'].includes(newStatus) && !['Won', 'Lost', 'Accepted'].includes(d.status);
+      return {
+        ...d,
+        status: newStatus,
+        resolvedDate: isResolving ? now : d.resolvedDate,
+        timeline: [
+          ...d.timeline,
+          {
+            id: `tl-update-${Date.now()}`,
+            timestamp: now,
+            phase: newStatus === 'Won' ? 'Won' as const :
+                   newStatus === 'Lost' ? 'Lost' as const :
+                   newStatus === 'Accepted' ? 'Accepted' as const :
+                   newStatus === 'In Progress' ? 'Counter-chargeback submitted' as const :
+                   'Chargeback issued' as const,
+            description: `Status changed to ${newStatus}`,
+          }
+        ],
+      };
+    }));
+    addToast(`Dispute status updated to ${newStatus}`, 'success');
+  };
+
+  const handleDisputeNotesChange = (disputeId: string, notes: string) => {
+    setDisputes(prev => prev.map(d => d.id === disputeId ? { ...d, notes } : d));
+  };
+
+  const handleMarkSubmitted = (disputeId: string) => {
+    setDisputes(prev => prev.map(d => {
+      if (d.id !== disputeId) return d;
+      return {
+        ...d,
+        status: d.status === 'Open' ? 'In Progress' as const : d.status,
+        timeline: [
+          ...d.timeline,
+          {
+            id: `tl-submit-${Date.now()}`,
+            timestamp: new Date(),
+            phase: 'Counter-chargeback submitted' as const,
+            description: 'Counter-chargeback document submitted',
+          }
+        ],
+      };
+    }));
+    addToast('Counter-chargeback marked as submitted', 'success');
+  };
+
+  const handleExportCase = (dispute: Dispute) => {
+    addToast(`Exporting case ${dispute.id}...`, 'success');
+    window.print();
+  };
+
   return (
     <div className="flex min-h-screen bg-bg-page font-sans text-text-primary selection:bg-accent-interactive/20 selection:text-accent-interactive">
       <Sidebar activePage={activePage} setActivePage={setActivePage} />
@@ -260,8 +328,28 @@ const App = () => {
               </motion.div>
             )}
 
+            {activePage === 'Disputes' && (
+              <motion.div
+                key="disputes"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <DisputesPage
+                  disputes={disputes}
+                  allTransactionsCount={allTransactions.length}
+                  pspConfigs={pspConfigs}
+                  onStatusChange={handleDisputeStatusChange}
+                  onNotesChange={handleDisputeNotesChange}
+                  onBuildTemplate={(dispute) => setWizardDispute(dispute)}
+                  onExportCase={handleExportCase}
+                />
+              </motion.div>
+            )}
+
             {activePage === 'Reports' && (
-              <motion.div 
+              <motion.div
                 key="reports"
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -368,10 +456,20 @@ const App = () => {
         )}
 
         {showHistoryModal && (
-          <PSPHistoryModal 
+          <PSPHistoryModal
             isOpen={showHistoryModal}
             onClose={() => { setShowHistoryModal(false); setHistoryPsp(null); }}
             psp={historyPsp}
+          />
+        )}
+
+        {wizardDispute && (
+          <DisputeTemplateWizard
+            isOpen={!!wizardDispute}
+            dispute={wizardDispute}
+            pspChargebackRules={pspConfigs.find(p => p.name === wizardDispute.transaction.gateway)?.chargebackRules}
+            onClose={() => setWizardDispute(null)}
+            onMarkSubmitted={handleMarkSubmitted}
           />
         )}
       </AnimatePresence>
