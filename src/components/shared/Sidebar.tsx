@@ -41,17 +41,23 @@ export const Sidebar = ({ activePage, setActivePage }: SidebarProps) => {
           active={activePage === 'Transactions'} 
           onClick={() => setActivePage('Transactions')} 
         />
-        <SidebarItem 
-          icon={RefreshCw} 
-          label="Reconciliation" 
-          active={activePage === 'Reconciliation'} 
-          onClick={() => setActivePage('Reconciliation')} 
+        <SidebarItem
+          icon={RefreshCw}
+          label="Reconciliation"
+          active={activePage === 'Reconciliation'}
+          onClick={() => setActivePage('Reconciliation')}
         />
-        <SidebarItem 
-          icon={BarChart3} 
-          label="Reports" 
-          active={activePage === 'Reports'} 
-          onClick={() => setActivePage('Reports')} 
+        <SidebarItem
+          icon={ShieldAlert}
+          label="Disputes"
+          active={activePage === 'Disputes'}
+          onClick={() => setActivePage('Disputes')}
+        />
+        <SidebarItem
+          icon={BarChart3}
+          label="Reports"
+          active={activePage === 'Reports'}
+          onClick={() => setActivePage('Reports')}
         />
         <SidebarItem 
           icon={Settings} 
@@ -71,7 +77,6 @@ export const Sidebar = ({ activePage, setActivePage }: SidebarProps) => {
         </div>
         <SidebarItem icon={Wallet} label="Settlement" />
         <SidebarItem icon={Layers} label="Gateways" />
-        <SidebarItem icon={ShieldAlert} label="Disputes" />
         <SidebarItem icon={Building2} label="Brands" />
         <SidebarItem icon={Settings} label="Settings" />
       </nav>
