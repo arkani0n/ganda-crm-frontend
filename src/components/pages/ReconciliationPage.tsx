@@ -294,9 +294,9 @@ export const ReconciliationPage = ({
 
       {/* Results Section */}
       {reconResults.length > 0 && (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col">
           {/* Clickable Stats Tab Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-x-3 gap-y-3 lg:gap-y-0 relative z-10 mb-0">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-x-3 gap-y-3 lg:gap-y-0 relative z-10">
             {([
               { key: 'All' as ReconFilter, label: 'Total Records', value: stats.total, labelColor: 'text-text-tertiary', valueColor: 'text-text-primary' },
               { key: 'Matched' as ReconFilter, label: 'Matched', value: stats.matched, labelColor: 'text-green-600', valueColor: 'text-green-600' },
@@ -308,17 +308,14 @@ export const ReconciliationPage = ({
                 key={key}
                 onClick={() => setActiveFilter(key)}
                 className={cn(
-                  "bg-white border p-4 flex flex-col gap-1 text-left transition-all",
+                  "border p-4 flex flex-col gap-1 text-left transition-all",
                   activeFilter === key
-                    ? "border-border-subtle border-b-white rounded-t-xl mb-[-14px] pb-8 z-10 relative"
-                    : "border-border-subtle rounded-xl hover:border-text-tertiary"
+                    ? "bg-white border-border-subtle border-b-transparent rounded-t-xl mb-[-1px] z-10 relative"
+                    : "bg-white border-border-subtle rounded-xl hover:border-text-tertiary mb-3"
                 )}
               >
                 <span className={cn("text-[10px] font-bold uppercase tracking-wider", labelColor)}>{label}</span>
                 <span className={cn("text-[20px] font-bold tabular-nums", valueColor)}>{value}</span>
-                {activeFilter === key && (
-                  <span className="text-[10px] text-accent-interactive font-medium mt-0.5">Filtering</span>
-                )}
               </button>
             ))}
           </div>
@@ -330,7 +327,7 @@ export const ReconciliationPage = ({
             activeFilter === 'Not in system' ? "rounded-xl rounded-tr-none" :
             "rounded-xl"
           )}>
-            <div className="px-5 py-3 border-b border-border-subtle bg-bg-page/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="px-5 py-3 border-b border-border-subtle bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <span className="text-[12px] font-bold text-text-primary">
                   {activeFilter === 'All' ? 'All Results' : activeFilter}
