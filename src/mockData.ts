@@ -1,4 +1,4 @@
-import { Transaction, Gateway, Status, ReconStatus, Currency, Brand, PSPConfig, PSPHistoryEntry, Settlement, SettlementStatus } from './types';
+import { Transaction, Gateway, Status, ReconStatus, Currency, Brand, PSPConfig, PSPHistoryEntry, Settlement, SettlementStatus, Dispute, DisputeStatus, DisputeReasonCategory, DisputePhase, DisputeTimelineEntry } from './types';
 import { subDays, startOfMinute, subHours, addDays, startOfDay, isBefore } from 'date-fns';
 
 const GATEWAYS: Gateway[] = ['Stripe', 'PayPal', 'Skrill', 'Neteller', 'Trustly', 'Paysafecard', 'MuchBetter', 'Rapid Transfer'];
@@ -38,7 +38,12 @@ export const generatePSPMockData = (): PSPConfig[] => {
       ipWhitelist: '3.18.12.63, 3.130.192.160',
       lastTested: subHours(now, 2),
       connectionStatus: 'Online',
-      notes: 'Main gateway for card payments.'
+      notes: 'Main gateway for card payments.',
+      chargebackRules: {
+        defaultResponseWindowDays: 21,
+        reasonOverrides: { 'Fraud': 10, 'Duplicate charge': 30 },
+        templates: [],
+      },
     },
     {
       id: 'psp-2',
@@ -67,7 +72,12 @@ export const generatePSPMockData = (): PSPConfig[] => {
       webhookSecret: 'whsec_••••••••',
       ipWhitelist: '173.0.80.0/20',
       lastTested: subDays(now, 1),
-      connectionStatus: 'Online'
+      connectionStatus: 'Online',
+      chargebackRules: {
+        defaultResponseWindowDays: 20,
+        reasonOverrides: { 'Fraud': 10 },
+        templates: [],
+      },
     },
     {
       id: 'psp-3',
@@ -97,7 +107,11 @@ export const generatePSPMockData = (): PSPConfig[] => {
       webhookSecret: 'whsec_••••••••',
       ipWhitelist: '212.227.142.1',
       lastTested: subDays(now, 3),
-      connectionStatus: 'Online'
+      connectionStatus: 'Online',
+      chargebackRules: {
+        defaultResponseWindowDays: 14,
+        templates: [],
+      },
     },
     {
       id: 'psp-4',
@@ -126,7 +140,11 @@ export const generatePSPMockData = (): PSPConfig[] => {
       webhookSecret: 'whsec_••••••••',
       ipWhitelist: '13.48.149.128',
       lastTested: subHours(now, 5),
-      connectionStatus: 'Offline'
+      connectionStatus: 'Offline',
+      chargebackRules: {
+        defaultResponseWindowDays: 30,
+        templates: [],
+      },
     }
   ];
 };
@@ -391,3 +409,124 @@ function getAmountRange(gateway: Gateway): number {
     default: return 5000;
   }
 }
+
+const DISPUTE_REASON_CATEGORIES: DisputeReasonCategory[] = [
+  'Fraud', 'Product not received', 'Not as described', 'Duplicate charge', 'Subscription cancelled', 'Other'
+];
+
+const DISPUTE_STATUSES: DisputeStatus[] = ['Open', 'In Progress', 'Won', 'Lost', 'Accepted'];
+
+const RAW_REASON_CODES: Record<DisputeReasonCategory, string[]> = {
+  'Fraud': ['VISA-10.4', 'MC-4837', 'MC-4863'],
+  'Product not received': ['VISA-13.1', 'MC-4855'],
+  'Not as described': ['VISA-13.3', 'MC-4853'],
+  'Duplicate charge': ['VISA-12.6.1', 'MC-4834'],
+  'Subscription cancelled': ['VISA-13.7', 'MC-4841'],
+  'Other': ['VISA-13.6', 'MC-4860'],
+};
+
+const ADVISORY_MAP: Record<DisputeReasonCategory, { recommendation: 'Recommended' | 'Neutral' | 'Low chance'; reasoning: string }> = {
+  'Fraud': { recommendation: 'Low chance', reasoning: 'Fraud disputes rarely overturned without strong auth proof' },
+  'Product not received': { recommendation: 'Recommended', reasoning: 'High win rate with delivery proof' },
+  'Not as described': { recommendation: 'Neutral', reasoning: 'Depends on evidence quality' },
+  'Duplicate charge': { recommendation: 'Recommended', reasoning: 'Usually straightforward to prove' },
+  'Subscription cancelled': { recommendation: 'Neutral', reasoning: 'Depends on policy clarity and timing' },
+  'Other': { recommendation: 'Neutral', reasoning: 'Assess on case-by-case basis' },
+};
+
+export const generateDisputeMockData = (transactions: Transaction[], pspConfigs: PSPConfig[]): Dispute[] => {
+  const now = new Date();
+  const disputedTxns = transactions.filter(t => t.status === 'Disputed');
+
+  return disputedTxns.map((txn, i) => {
+    const reasonCategory = getRandom(DISPUTE_REASON_CATEGORIES);
+    const rawCodes = RAW_REASON_CODES[reasonCategory];
+    const rawReasonCode = getRandom(rawCodes);
+
+    let status: DisputeStatus;
+    const statusRand = Math.random();
+    if (statusRand < 0.30) status = 'Open';
+    else if (statusRand < 0.55) status = 'In Progress';
+    else if (statusRand < 0.70) status = 'Won';
+    else if (statusRand < 0.85) status = 'Lost';
+    else status = 'Accepted';
+
+    const openedDate = subDays(txn.timestamp, -Math.floor(Math.random() * 5 + 1));
+
+    const pspConfig = pspConfigs.find(p => p.name === txn.gateway);
+    const defaultWindowDays = pspConfig?.chargebackRules?.defaultResponseWindowDays ?? 30;
+    const reasonWindowDays = pspConfig?.chargebackRules?.reasonOverrides?.[reasonCategory] ?? defaultWindowDays;
+    const deadline = addDays(openedDate, reasonWindowDays);
+
+    const pspFee = pspConfig?.chargebackFeeFixed ?? 15;
+
+    const isResolved = status === 'Won' || status === 'Lost' || status === 'Accepted';
+    const resolvedDate = isResolved ? subDays(now, Math.floor(Math.random() * 10)) : undefined;
+
+    const timeline: DisputeTimelineEntry[] = [
+      {
+        id: `tl-${i}-1`,
+        timestamp: txn.timestamp,
+        phase: 'Transaction created',
+        description: `Transaction ${txn.txnId} created`,
+      },
+    ];
+
+    if (txn.actualSettlementDate) {
+      timeline.push({
+        id: `tl-${i}-2`,
+        timestamp: txn.actualSettlementDate,
+        phase: 'Settled by PSP',
+        description: `Settled by ${txn.gateway}`,
+      });
+    }
+
+    timeline.push({
+      id: `tl-${i}-3`,
+      timestamp: openedDate,
+      phase: 'Chargeback issued',
+      description: `Chargeback issued — ${reasonCategory}`,
+    });
+
+    if (status === 'In Progress' || isResolved) {
+      const submitDate = addDays(openedDate, Math.floor(Math.random() * 5 + 1));
+      timeline.push({
+        id: `tl-${i}-4`,
+        timestamp: submitDate,
+        phase: 'Counter-chargeback submitted',
+        description: 'Counter-chargeback document submitted',
+      });
+    }
+
+    if (isResolved && resolvedDate) {
+      const phase: DisputePhase = status === 'Won' ? 'Won' : status === 'Lost' ? 'Lost' : 'Accepted';
+      timeline.push({
+        id: `tl-${i}-5`,
+        timestamp: resolvedDate,
+        phase,
+        description: `Dispute ${status.toLowerCase()}`,
+      });
+    }
+
+    timeline.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+    return {
+      id: `disp-${i + 1}`,
+      transactionId: txn.id,
+      transaction: txn,
+      status,
+      reasonCategory,
+      rawReasonCode,
+      disputeAmount: txn.amount,
+      pspFee,
+      currency: txn.currency,
+      openedDate,
+      deadline,
+      resolvedDate,
+      outcomeAmount: isResolved ? (status === 'Won' ? txn.amount : 0) : undefined,
+      worthFighting: ADVISORY_MAP[reasonCategory],
+      notes: '',
+      timeline,
+    };
+  });
+};
