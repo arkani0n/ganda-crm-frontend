@@ -21,6 +21,16 @@ export const Badge = ({ children, variant }: BadgeProps) => {
     Active: "bg-green-50 text-green-700 border-green-100",
     Inactive: "bg-bg-page text-text-tertiary border-border-subtle",
     Testing: "bg-amber-50 text-amber-700 border-amber-100",
+    // Dispute statuses
+    Open: "bg-blue-50 text-blue-700 border-blue-100",
+    'In Progress': "bg-amber-50 text-amber-700 border-amber-100",
+    Won: "bg-green-50 text-green-700 border-green-100",
+    Lost: "bg-red-50 text-red-700 border-red-100",
+    Accepted: "bg-bg-page text-text-tertiary border-border-subtle",
+    // Advisory badges
+    Recommended: "bg-green-50 text-green-700 border-green-100",
+    Neutral: "bg-amber-50 text-amber-700 border-amber-100",
+    'Low chance': "bg-red-50 text-red-700 border-red-100",
   };
 
   return (
