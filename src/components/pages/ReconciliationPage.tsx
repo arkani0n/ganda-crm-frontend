@@ -303,7 +303,7 @@ export const ReconciliationPage = ({
               { key: 'Missing in PSP' as ReconFilter, label: 'Missing in PSP', value: stats.missing, labelColor: 'text-red-600', valueColor: 'text-red-600' },
               { key: 'Amount diff' as ReconFilter, label: 'Amount Diff', value: stats.diff, labelColor: 'text-amber-600', valueColor: 'text-amber-600' },
               { key: 'Not in system' as ReconFilter, label: 'Not in System', value: stats.notInSys, labelColor: 'text-text-tertiary', valueColor: 'text-text-secondary' },
-            ]).map(({ key, label, value, labelColor, valueColor }) => (
+            ]).map(({ key, label, value, labelColor, valueColor }, index) => (
               <button
                 key={key}
                 onClick={() => setActiveFilter(key)}
@@ -324,7 +324,12 @@ export const ReconciliationPage = ({
           </div>
 
           {/* Results Table */}
-          <div className="bg-white border border-border-subtle rounded-xl overflow-hidden">
+          <div className={cn(
+            "bg-white border border-border-subtle overflow-hidden",
+            activeFilter === 'All' ? "rounded-xl rounded-tl-none" :
+            activeFilter === 'Not in system' ? "rounded-xl rounded-tr-none" :
+            "rounded-xl"
+          )}>
             <div className="px-5 py-3 border-b border-border-subtle bg-bg-page/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <span className="text-[12px] font-bold text-text-primary">
